@@ -1,0 +1,154 @@
+swagger: "2.0"
+info:
+  description: "API crud with swagger"
+  version: "1.0.0"
+  title: "Employee API"
+  contact:
+    email: "ronald.jc@hotmail.com"
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+
+host: "localhost:8080"
+basePath: /employee/v1
+schemes:
+ - https
+ - http
+    
+
+paths:
+  
+  /employee:
+    get:
+      tags: 
+        - "consult"
+      summary: "returns all the employees"
+      operationId: "getEmployees"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "response OK"
+          schema:
+              type: array
+              items:
+                $ref: "#/definitions/Employee"
+
+    
+    post:
+      tags: 
+        - "create"
+      summary: "Create employee"
+      operationId: "addUser"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "user"
+        description: "employee's information"
+        required: true
+        schema:
+          $ref: "#/definitions/Employee"
+      responses:
+        201:
+          description: "Crerated employee"
+          schema:
+            $ref: "#/definitions/Employee"
+          headers:
+            Location:
+              type: "string"
+  
+  /employee/{id}:
+    
+    get:
+      tags: 
+        - "consult"
+      summary: "returns an employee"
+      operationId: "GetEmployee"
+      description: ""
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+        format: "int32"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Employee"
+          headers: {}
+    
+    put:
+      tags: 
+        - "update"
+      summary: "Update employee"
+      operationId: "updateEmployee"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+        format: "int32"
+      responses:
+        200:
+          description: "employee alterado."
+          schema:
+            $ref: "#/definitions/Employee"
+    
+    delete:
+      tags: 
+        - "remove"
+      summary: "Remove the employee"
+      description: ""
+      operationId: "removeEmployee"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+        format: "int32"
+      responses:
+        204:
+          description: "removed employee"
+
+        
+definitions:
+  Employee:
+    type: "object"
+    properties:
+      first_name:
+        type: string
+        maxLength: 25
+      last_name:
+        type: string
+        maxLength: 25
+      department:
+        type: string
+        maxLength: 30
+      job_title:
+        type: string
+        maxLength: 30
+      employee_type:
+        type: string
+        maxLength: 20
+      start_date:
+        type: string
+        maxLength: 8
+      status:
+        type: string
+        maxLength: 20
+      email:
+        type: string
+        maxLength: 20

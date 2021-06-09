@@ -1,0 +1,163 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: ronald.jc@hotmail.com
+  description: API crud with swagger
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Employee API
+  version: 1.0.0
+servers:
+- url: https://localhost:8080/employee/v1
+- url: http://localhost:8080/employee/v1
+paths:
+  /employee:
+    get:
+      operationId: getEmployees
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Employee'
+                type: array
+          description: response OK
+      summary: returns all the employees
+      tags:
+      - consult
+      x-accepts: application/json
+      x-tags:
+      - tag: consult
+    post:
+      operationId: addUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+        description: employee's information
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: Crerated employee
+          headers:
+            Location:
+              schema:
+                type: string
+      summary: Create employee
+      tags:
+      - create
+      x-codegen-request-body-name: user
+      x-contentType: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: create
+  /employee/{id}:
+    delete:
+      operationId: removeEmployee
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          format: int32
+          type: integer
+      responses:
+        "204":
+          content: {}
+          description: removed employee
+      summary: Remove the employee
+      tags:
+      - remove
+      x-accepts: application/json
+      x-tags:
+      - tag: remove
+    get:
+      operationId: GetEmployee
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          format: int32
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: successful operation
+      summary: returns an employee
+      tags:
+      - consult
+      x-accepts: application/json
+      x-tags:
+      - tag: consult
+    put:
+      operationId: updateEmployee
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          format: int32
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: employee alterado.
+      summary: Update employee
+      tags:
+      - update
+      x-accepts: application/json
+      x-tags:
+      - tag: update
+components:
+  schemas:
+    Employee:
+      example:
+        employee_type: employee_type
+        last_name: last_name
+        department: department
+        first_name: first_name
+        job_title: job_title
+        email: email
+        start_date: start_date
+        status: status
+      properties:
+        first_name:
+          maxLength: 25
+          type: string
+        last_name:
+          maxLength: 25
+          type: string
+        department:
+          maxLength: 30
+          type: string
+        job_title:
+          maxLength: 30
+          type: string
+        employee_type:
+          maxLength: 20
+          type: string
+        start_date:
+          maxLength: 8
+          type: string
+        status:
+          maxLength: 20
+          type: string
+        email:
+          maxLength: 20
+          type: string
+      type: object
+x-original-swagger-version: "2.0"
