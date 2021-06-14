@@ -15,17 +15,18 @@ import io.swagger.annotations.*;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 
-
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2021-06-07T13:47:40.434991-03:00[America/Sao_Paulo]")
 @Entity
 @Table(name="employees")
 public class Employee   {
   @Id
   @GeneratedValue(strategy=GenerationType.IDENTITY)
-  private @Valid int employee_id;	
+  private @Valid Integer employee_id;	
   private @Valid String first_name;
   private @Valid String last_name;
   private @Valid String department;
@@ -37,10 +38,11 @@ public class Employee   {
   /**
    **/
   
-  public Employee employee_id(int employee_id) {
+  public Employee employee_id(Integer employee_id) {
 	  this.employee_id = employee_id;
 	  return this;
   }
+  
   
   @ApiModelProperty(value = "")
   @JsonProperty("employee_id")
@@ -48,9 +50,6 @@ public class Employee   {
     return employee_id;
   }
 
-  public void setEmployee_id(int employee_id) {
-	  this.employee_id = employee_id;
-  }
 
   /**
    **/
@@ -167,7 +166,7 @@ public class Employee   {
   
   @ApiModelProperty(value = "")
   @JsonProperty("start_date")
- @Size(max=8)  public String getstart_date() {
+ @Size(max=10)  public String getstart_date() {
     return start_date;
   }
 
