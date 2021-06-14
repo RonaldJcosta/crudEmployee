@@ -1,10 +1,7 @@
 package br.com.ronald.api;
-import br.com.ronald.connection.*;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -25,9 +22,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.query.Query;
-
-import com.fasterxml.jackson.databind.util.BeanUtil;
-
 import br.com.ronald.model.Employee;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -45,26 +39,24 @@ public class EmployeeApi {
     @Produces({ "application/json" })
     @ApiOperation(value = "Create employee", notes = "", response = Employee.class, tags={ "create" })
     @ApiResponses(value = { 
-        @ApiResponse(code = 201, message = "Created employee", response = Employee.class)
+        @ApiResponse(code = 201, message = "Crerated employee", response = Employee.class)
     })
-    public Response addUser(@Valid @NotNull Employee user) {
-    	Response response = null;
-    	
+    public Response addUser(@Valid @NotNull Employee employee) {
+    	Response response;
     	try {
-    		
-    		Connection connection = new Connection();
-        	Session session = connection.openConnection();
-        	
+    		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
+    		Metadata meta = new MetadataSources(ssr).getMetadataBuilder().build();
+    		SessionFactory factory = meta.getSessionFactoryBuilder().build();
+    		Session session = factory.openSession();
         	session.beginTransaction();
-        	int employee_id = (int) session.save(user);
+        	session.save(employee);
         	session.getTransaction().commit();
-        	
-        	connection.closeConnection();
-        	
-        	response = Response.ok().entity(employee_id).build();
-        	
+        	factory.close();
+    		session.close();
+        	response = Response.status(201).entity(employee).build();
 		} catch (Exception e) {
-			response = Response.status(500).entity("Server Error").build();
+			e.getMessage();
+			response = Response.status(500).entity("Internal server Error").build();
 		}
     	
     	
@@ -72,60 +64,77 @@ public class EmployeeApi {
 
     }
 
-    @GET
+    @SuppressWarnings("unchecked")
+	@GET
     @Path("/{id}")
     @Produces({ "application/json" })
-    @ApiOperation(value = "return an employee", notes = "", response = Employee.class, tags={ "consult" })
+    @ApiOperation(value = "returns an employee", notes = "", response = Employee.class, tags={ "consult" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "successful operation", response = Employee.class)
     })
     
-    public Response getEmployee(@PathParam("id") @ApiParam("update") Integer id) {
-    	
+    public Response getEmployee(@PathParam("id") @ApiParam("update") String id) {
+    	Employee employee = new Employee();
     	Response response = null;
     	
-    	try {
-    		Connection connection = new Connection();
-        	Session session = connection.openConnection();
-        	
-    		@SuppressWarnings("unchecked")
-    		Query<Employee> query = session.createQuery("from Employee where employee_id = :id");
-    		query.setParameter("id", id);
-    		Employee employee = query.getSingleResult();
-    		connection.closeConnection();
-			
-    		response = Response.ok().entity(employee).build();
-		} catch (Exception e) {
-			response = Response.status(500).entity("Server Error").build();
-		}
     	
+		try {
+			StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
+			Metadata meta = new MetadataSources(ssr).getMetadataBuilder().build();
+			SessionFactory factory = meta.getSessionFactoryBuilder().build();
+			Session session = factory.openSession();
+			Integer newId = Integer.parseInt(id);
+			Query<Employee> query = session.createQuery("from Employee where employee_id = :id");
+			query.setParameter("id", newId);
+			employee = query.getSingleResult();
+			factory.close();
+			session.close();
+			response =  Response.ok().entity(employee).build();
+		}catch(NumberFormatException e) {
+			e.getMessage();
+			response = Response.status(400).entity("Id Formated Invalid").build();
+			
+		} catch (NoResultException e) {
+			e.getMessage();
+			response = Response.status(404).entity("Not Found").build();
+			
+		} catch(Exception e) {
+			e.getMessage();
+			System.out.println(e.getMessage());
+			response = Response.status(500).entity("Internal Server Error").build();
+		}
+		
 		return response;
+		
     }
 
-    @GET
+    @SuppressWarnings("unchecked")
+	@GET
     @Produces({ "application/json" })
     @ApiOperation(value = "returns all the employees", notes = "", response = Employee.class, responseContainer = "List", tags={ "consult" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "response OK", response = Employee.class, responseContainer = "List")
     })
     public Response getEmployees() {
-    	List<Employee> list;
     	Response response;
-    	
-    	try {
-    		Connection connection = new Connection();
-    		Session session = connection.openConnection();
+    		try {
+    			List<Employee> list;
+    			StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
+    			Metadata meta = new MetadataSources(ssr).getMetadataBuilder().build();
+    			SessionFactory factory = meta.getSessionFactoryBuilder().build();
+    			Session session = factory.openSession();
+    			Query<Employee> query = session.createQuery("from Employee");
+    			list = query.list();
+    			factory.close();
+    			session.close();
+    			 response = Response.ok().entity(list).build();
+    		} catch(Exception e) {
+    			e.getMessage();
+    			response = Response.status(500).entity("Internal server Error").build(); 
+    		}
+    		return response;
 
-    		Query<Employee> query = session.createQuery("from Employee");
-    		list = query.list();
-    		connection.closeConnection();
-    		response =  Response.ok().entity(list).build();
-			
-		} catch (Exception e) {
-			response = Response.status(500).entity("Server Error").build();
-		}
-    	
-			return response;
+
 
 
     }
@@ -135,61 +144,91 @@ public class EmployeeApi {
     @Path("/{id}")
     @ApiOperation(value = "Remove the employee", notes = "", response = Void.class, tags={ "remove" })
     @ApiResponses(value = { 
-    		@ApiResponse(code = 204, message = "removed employee", response = Void.class)
+        @ApiResponse(code = 204, message = "removed employee", response = Void.class)
     })
-    public Response removeEmployee( @PathParam("id") Integer id) {
-    	Response response = null;
+    public Response removeEmployee( @PathParam("id") String id) {
+    	
+    	Response response;
+    	
     	try {
-    		Connection connection = new Connection();
-        	Session session = connection.openConnection();
-        	
-        	Query<Employee> query = session.createQuery("from Employee where employee_id = :id");
-    		query.setParameter("id", id);
+    		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
+    		Metadata meta = new MetadataSources(ssr).getMetadataBuilder().build();
+    		SessionFactory factory = meta.getSessionFactoryBuilder().build();
+    		Session session = factory.openSession();
+    		Integer newId = Integer.parseInt(id);
+    		Query<Employee> query = session.createQuery("from Employee where employee_id = :id");
+    		query.setParameter("id", newId);
     		Employee employee = query.getSingleResult();
     		session.beginTransaction();
     		session.delete(employee);
     		session.getTransaction().commit();
-    		connection.closeConnection();
-    		
-    		response =  Response.status(204).entity("Deletado com sucesso").build();
-		} catch (Exception e) {
-			// TODO: handle exception
-			
-			response = Response.status(500).entity("Erro on server").build();
-		}
+    		factory.close();
+    		session.close();
 
-        return response;
+            response = Response.status(204).build();
+    	} catch(NumberFormatException e) {
+    			e.getMessage();
+    			response = Response.status(400).entity("Id Formated Invalid").build();
+    			
+    		} catch (NoResultException e) {
+    			e.getMessage();
+    			response = Response.status(404).entity("Not Found").build();
+    			
+    		} catch(Exception e) {
+    			e.getMessage();
+    			System.out.println(e.getMessage());
+    			response = Response.status(500).entity("Internal server Error").build(); 
+    			
+    		}	
+    	
+    	return response;
+    	
     }
 
-    @PUT
+	@PUT
     @Path("/{id}")
     @Produces({ "application/json" })
     @ApiOperation(value = "Update employee", notes = "", response = Employee.class, tags={ "update" })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "employee alterado.", response = Employee.class)
     })
-    public Response updateEmployee(@Valid Employee employee, @PathParam("id") @ApiParam("update") Integer id) {
-    	
-    	Response response = null;
+    public Response updateEmployee(@Valid Employee employee, @PathParam("id") @ApiParam("update") String id) {
+    	Response response;
+    	try {
+    		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build();
+    		Metadata meta = new MetadataSources(ssr).getMetadataBuilder().build();
+    		SessionFactory factory = meta.getSessionFactoryBuilder().build();
+    		Session session = factory.openSession();
+    		
+        	Integer newId = Integer.parseInt(id);
+        	Employee newEmployee = (Employee) session.load(Employee.class, newId);
+        	
+    		BeanUtils.copyProperties(newEmployee, employee);
+    		session.beginTransaction();
 
-		try {
-			Connection connection = new Connection();
-	    	Session session = connection.openConnection();
+    		session.update(newEmployee);
+    		session.getTransaction().commit();
 			
-			Employee newEmployee = (Employee) session.load(Employee.class, id);
-			BeanUtils.copyProperties(newEmployee, employee);
-			session.beginTransaction();
-
-			session.update(newEmployee);
-			session.getTransaction().commit();
-			connection.closeConnection();
-			response = Response.ok().entity(newEmployee).build();
-		} catch (IllegalAccessException | InvocationTargetException e) {
+	 		factory.close();
+    		session.close();
+    		
+    		response = Response.ok().entity(newEmployee).build();
+    		
+		} catch(NumberFormatException e) {
 			
-			e.printStackTrace();
+			System.out.println(e.getMessage());
+			response = Response.status(400).entity("Id Formated Invalid").build();
 			
-			response =  Response.status(500).entity("Error on server").build();
+		} catch (NoResultException e) {
+			
+			e.getMessage();
+			response = Response.status(404).entity("Not Found").build();
+			
+		} catch (Exception e) {
+			e.getMessage();
+			response = Response.status(404).entity("Not Found").build();
 		}
+    	
     	
     	return response;
     }

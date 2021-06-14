@@ -1,4 +1,4 @@
-package br.com.ronald.connection;
+package br.com.ronald.database;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -7,7 +7,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
-public class Connection {
+public class Database {
 	
 	StandardServiceRegistry ssr;
 	Metadata meta;
